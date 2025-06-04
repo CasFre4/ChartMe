@@ -1,0 +1,31 @@
+{
+  "name": "chartme",
+  "version": "1.0.0",
+  "description": "Turn an image into a chart.",
+  "main": "ChartMe.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CasFre4/ChartMe.git"
+  },
+  "keywords": [
+    "Chart",
+    "Face"
+  ],
+  "author": "CasFre4",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CasFre4/ChartMe/issues"
+  },
+  "homepage": "https://github.com/CasFre4/ChartMe#readme",
+  "dependencies": {
+    "color-name": "^2.0.0",
+    "jimp": "^1.6.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4"
+  }
+}
