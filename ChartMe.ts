@@ -55,10 +55,7 @@ async function ChartMe (imagePath: string, ...args: any[]) {
     image.write('./images/outputTest.png')
 
 }
-type checkedValuesTypes = {
-    fillColors?: ColorEntry[],
-    targetColors?: ColorEntry[]
-}
+
 type colorNumbers = [number, number, number, number] | [number, number, number]
 type distanceColors = {
     targetColor: colorNumbers
@@ -73,6 +70,23 @@ function euclideanDistance(a, b) {
       a.reduce((sum, val, i) => sum + (val - b[i]) ** 2, 0)
     );
 }
+class PriorityQueue<T> {
+    private data: { item: T, priority: number }[] = [];
+  
+    enqueue(item: T, priority: number) {
+      this.data.push({ item, priority });
+      this.data.sort((a, b) => a.priority - b.priority); // Min-heap behavior
+    }
+    dequeue(): T | undefined {
+      return this.data.shift()?.item;
+    }
+    peek(): T | undefined {
+      return this.data[0]?.item;
+    }
+    isEmpty(): boolean {
+      return this.data.length === 0;
+    }
+  }
 function distanceFlattened({targetColor, currentColor}: distanceColors) {
     if (targetColor.length !== 3 && currentColor.length !== 3 && targetColor.length !== 4 && currentColor.length !== 4) {
         throw new Error(`Colors are not the correct length, should be 3 or 4`)
@@ -87,9 +101,9 @@ function distanceFlattened({targetColor, currentColor}: distanceColors) {
 }
 
 export async function PreProcessChart ({imagePath, fillColors, targetColors, fillTarget}: defaultTypes) {
-    const checkedValues: checkTypes = checkValues({fillColors: fillColors, targetColors: targetColors, fillTarget: fillTarget})
-    fillColors = checkedValues.fillColors
-    targetColors = checkedValues.targetColors
+    const bundle: colorsBundled = checkValues({fillColors: fillColors, targetColors: targetColors, fillTarget: fillTarget})
+    // fillColors = checkedValues.fillColors
+    // targetColors = checkedValues.targetColors
     const image = await Jimp.read(imagePath)
     // await image.greyscale()
     // console.log(colorName['red'][0])
@@ -121,26 +135,66 @@ export async function PreProcessChart ({imagePath, fillColors, targetColors, fil
 
     image.write('./images/outputTest.png')
 }
-function zipColors (fillColors: ColorEntry[], targetColors: ColorEntry[]) {
+function zipColors (fillColors: colorNumbers[], targetColors: colorNumbers[]): colorsBundled{
     let zip: colorsBundled = []
-    for (const fill of fillColors) {
-        
-        for (const target of targetColors) {
-
+    const pq: PriorityQueue<number[]> = new PriorityQueue()
+    for (const [row, fill] of fillColors.entries()) {
+        const currentArr: number[] = []
+        fillColors
+        for (const [col, target] of targetColors.entries()) {
+            pq.enqueue([row, col], distanceFlattened({targetColor: fill, currentColor: target}))
         }
     }
-} 
+    const colsInUse: number[] = []
+    const rowsInUse: number[] = []
+    while (colsInUse.length < targetColors.length) {
+        const [row, col] = pq.dequeue() ?? []
+        if(!(colsInUse.includes(col) || rowsInUse.includes(row))){
+            zip.push({fcolor: fillColors[row], tcolor: targetColors[col]})
+            colsInUse.push(col)
+            rowsInUse.push(row)
+        }
+    }
+    return zip
+}
+   
+    
 function checkValues ({fillColors, targetColors, fillTarget}: checkTypes): colorsBundled{
+    let fill: colorNumbers[] = []
+    let target: colorNumbers[] = []
+    
     if (fillColors === undefined && !(targetColors === undefined)) {
         const gray: number = 255/(targetColors.length - 1 )
-        fillColors = Array(targetColors.length).fill(0).map((_, i) => [i * gray, i * gray, i * gray])
+        fill = Array(targetColors.length).fill(0).map((_, i) => [i * gray, i * gray, i * gray])
+        for (const i in targetColors) {
+            // fill[i] = colorCorrector(fillColors[i])
+            target[i] = colorCorrector(targetColors[i])
+        }
     } else if (!(fillColors === undefined) && targetColors === undefined) {
         const gray: number = 255/(fillColors.length - 1 )
-        targetColors = Array(fillColors.length).fill(0).map((_, i) => [i * gray, i * gray, i * gray])
+        target = Array(fillColors.length).fill(0).map((_, i) => [i * gray, i * gray, i * gray])
+        for (const i in fillColors) {
+            fillColors[i] = colorCorrector(fillColors[i])
+        }
+    
+    } else if (!(fillColors===undefined || targetColors===undefined)) {
+        for (const i in fillColors) {
+            fill[i] = colorCorrector(fillColors[i])
+            target[i] = colorCorrector(targetColors[i])
+        }
     }
+    
     if ((fillColors === undefined) && (targetColors === undefined) && !(fillTarget === undefined)) {
         return fillTarget
-    } else if ((fillColors === undefined) && (targetColors === undefined) && (fillTarget === undefined)) {
+    } else if (!(fillColors === undefined) && !(targetColors === undefined) && !(fillTarget === undefined)) {
+        // const tmpArray = [...fillTarget, ...zipColors(fill, target)]
+        const tcolorSet = new Set(fillTarget.map(obj => obj.tcolor))
+        const zipped = zipColors(fill, target).filter(obj=> !tcolorSet.has(obj.tcolor))
+        return [...fillTarget, ...zipped]
+        
+    } else if (!(fillColors === undefined) && !(targetColors === undefined) && (fillTarget === undefined)) {
+        return zipColors(fill, target)
+    } else { //if ((fillColors === undefined) && (targetColors === undefined) && (fillTarget === undefined))
         return [
             {
                 'tcolor': colorName['white'],
@@ -151,33 +205,6 @@ function checkValues ({fillColors, targetColors, fillTarget}: checkTypes): color
                 'fcolor': colorName['black']
             },
         ]
-    } else if (!(fillColors === undefined) && !(targetColors === undefined) && !(fillTarget === undefined)) {
-        let tmpArray = [...fillTarget]
-        for (const pair in fillColors) {
-            
-        }
-    } else {
-        throw new Error(`Colors misformatted`)
-    }
-    if (fillColors === undefined|| fillColors.length === 0) {
-        if (targetColors ===undefined || targetColors.length === 0) {
-            targetColors = [colorName['black'], colorName['white']]
-            fillColors = [colorName['black'], colorName['white']]
-        } else {
-            const gray: number = 255/(targetColors.length - 1 )
-            fillColors = Array(targetColors.length).fill(0).map((_, i) => [i * gray, i * gray, i * gray])
-        }
-    } else if (targetColors ===undefined || targetColors.length === 0) {
-        const gray: number = 255/fillColors.length
-        targetColors = Array(fillColors.length).fill(0).map((_, i) => [i * gray, i * gray, i * gray])
-    } else {
-        if (fillColors.length !== targetColors.length) {
-            throw new Error('Length of target and fill colors should be equal')
-        }
-    }
-    for (const index in fillColors) {
-        fillColors[index] = colorCorrector(fillColors[index])
-        targetColors[index] = colorCorrector(targetColors[index])
     }
 }
 function isTripleOrQuad( arr: any ): arr is [number, number, number] | [number, number, number, number] {
