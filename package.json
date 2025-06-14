@@ -5,7 +5,10 @@
   "main": "ChartMe.ts",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
@@ -23,9 +26,13 @@
   "homepage": "https://github.com/CasFre4/ChartMe#readme",
   "dependencies": {
     "color-name": "^2.0.0",
+    "d3": "^7.9.0",
     "jimp": "^1.6.0"
   },
   "devDependencies": {
-    "tsx": "^4.19.4"
+    "@types/color-name": "^2.0.0",
+    "@types/d3": "^7.4.3",
+    "tsx": "^4.19.4",
+    "vite": "^6.3.5"
   }
 }
