@@ -36,13 +36,14 @@ const outputPath = './images/nearestNeighbor.png'
 // ChartMe(imagePath, './data/data.txt', {fillTarget: [{tcolor: 'black', fcolor: 'black'}, {tcolor: [150, 150, 150, 255], fcolor: 'white'}]} )
 const chart = await new ChartMe({image: image, fillTarget: [{tcolor: [0,0,0,255], fcolor: 'green'}, {tcolor: [150, 150, 150, 255], fcolor: 'red'}]}).load()
 // chart.preview(outputPath)
+chart.cleanData()
 chart.preprocess()
-console.log(chart.processed[100])
-console.log(chart.data[100])
+// console.log(chart.processed[100])
+// console.log(chart.data[100])
 
-console.log(chart.processed[150])
-console.log(chart.processed[249])
-console.log(chart.data[249])
+// console.log(chart.processed[150])
+// console.log(chart.processed[249])
+// console.log(chart.data[249])
 chart.graph({})
 // .catch(err => {
 //   console.error('Error:', err);

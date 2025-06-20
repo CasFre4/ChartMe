@@ -1,6 +1,9 @@
 import { Jimp, ResizeStrategy } from 'jimp'
 import colorName from 'color-name'
 import * as d3 from "d3"
+import { SplitStrategy } from './constants'
+
+
 
 type colorEntry = string | [number, number, number] | [number, number, number, number]
 type colorBundle = {
@@ -28,7 +31,7 @@ type mainTypes = {
 type checkTypes = { 
     fillColors?: colorEntry[],
     targetColors?: colorEntry[],
-    fillTarget?: colorPreBundled[]
+    bundledColors?: colorPreBundled[]
 } 
 type colorNumbers = [number, number, number, number]
 type distanceColors = {
@@ -38,9 +41,9 @@ type distanceColors = {
 
 type constructorType = {
     image: any
-    fillColors?: (colorEntry[]|undefined)
-    targetColors?: (colorEntry[]|undefined)
-    fillTarget?: (colorPreBundled[]|undefined)
+    fillColors?: colorEntry[]
+    targetColors?: colorEntry[]
+    bundledColors?: colorPreBundled[]
     width?: (number|undefined)
     height?: (number|undefined)
 }
@@ -49,23 +52,27 @@ type graphType = {
         height?: number
         margin?: {[key: string]: number}
     }
-
+type splitTypes = {
+    splits?: number
+    fillColors?: colorEntry[]
+    targetColors?: colorEntry[]
+    bundledColors?: colorsBundled
+    splitstrategy?: string
+}
 export default class ChartMe {
     image: any
     data: number[][]
     bundle: colorsBundled
-    fillColors: colorEntry[]
-    targetColors: colorEntry[]
-    fillTarget: colorPreBundled[]
+    // fillColors: colorEntry[]
+    // targetColors: colorEntry[]
+    // bundledColors: colorPreBundled[]
     width: number
     height: number
     // processed: {[key: string]: number}[]
     processed: {[key: string]: number}[]
     
-    constructor({image, fillColors, targetColors, fillTarget, width, height}: constructorType) {
-        this.bundle = checkValues({fillColors,targetColors, fillTarget})
-        // console.log(this.bundle)
-        // console.log(checkValues({fillColors,targetColors, fillTarget}))
+    constructor({image, fillColors, targetColors, bundledColors, width, height}: constructorType) {
+        this.bundle = checkValues({fillColors,targetColors, bundledColors})
         this.image = image
         // let newHeight: number
         // let newWidth: number
@@ -91,8 +98,8 @@ export default class ChartMe {
         await recolorImage(this.image, this.bundle)
         this.image.resize({w: this.width, h:this.height, mode: value})
         this.data = datafy(this.image, this.bundle)
-        console.log(this.data[50])
-        console.log(this.data[150])
+        // console.log(this.data[50])
+        // console.log(this.data[150])
         return this
     }
     // async chart (inputPath: `${string}.${string}`='./image/testImage.png', outputPath: `${string}.${string}`='./data/data.txt', {fillColors, targetColors, fillTarget}: defaultTypes) {
@@ -139,7 +146,7 @@ export default class ChartMe {
     //     }
     //     this.processed = processedArr
     // }
-     preprocess() {
+    preprocess() {
         const processedArr: {[key: string]: number}[] = []
         // console.log(this.bundle)
         const length: number = Object.keys(this.bundle).length
@@ -150,7 +157,7 @@ export default class ChartMe {
             for (const x of row) {
                 // let rownum: number = rowData[x.toString()]
                 if (x !== -1 ){
-                    rowData[x.toString()] = ++ rowData[x.toString()]
+                    rowData[x.toString()] = rowData[x.toString()] + 1
                 } 
             }
             rowData.order = this.image.height - j
@@ -159,7 +166,174 @@ export default class ChartMe {
         this.processed = processedArr
         // this.processed = preprocess2electricbugalu(processedArr)
     }
+    splitColors({splits, fillColors, targetColors, bundledColors, splitstrategy}: splitTypes) {
+        // const newSplits: number 
+
+        
+            
+        let newSplits: number
+        if (splits === undefined) {
+            newSplits = 1
+        } else {
+            newSplits = splits
+        }
+        const newData: number[][] = []
+        //Start processing Image info
+        for (const [j, row] of this.data.entries()) {
+            const segments = biggestSegments(row) ///we will iterate through when we reach a new color we will measure how far it goes set a range then with the new color will do the same we will have a dict color index then for each index it will be an array of tuples with the range we graph the largest range for each color we will order them based smallest index then if there are gaps we will replace the beginning of the prev segment with half of whats missing and the beginning of next subtract half of whats missing
+            const longSegs: PriorityQueue<Object> = new PriorityQueue
+            for (const k of Object.keys(segments)) {
+                for (let i; i < newSplits ; i++) {
+                    const dequed: number[] | undefined = segments[k].dequeue()
+                    if (!(dequed === undefined)) {
+                        const tmp: {[key: string]: number[]} = {[k]: dequed}
+
+                        longSegs.enqueue(tmp, dequed[0])
+                    } else  {
+                        break
+                    } //Can proprotionately adjust so for every white in a segement I just add a white in length to the white segement in that area or I could do the most prominent color in the region or some combo of the two
+                }///Have to figure out how to maintain shape of object with graph could be cutting off edges if segments arent long there
+            }
+            const completeSegments:Object[] = []
+            let prev = longSegs.dequeue()
+            if (!longSegs.isEmpty() && prev!==undefined) {
+                while (!longSegs.isEmpty()) {
+                    const current = longSegs.dequeue()
+                    if (current===undefined) {
+                        throw new Error("Segment processing error")
+                    } else {
+                        const prevKey: string = Object.keys(prev)[0]
+                        const currentKey: string = Object.keys(current)[0]
+                        const prevIndexStart: number = prev[prevKey][1]
+                        const currentIndexEnd: number = current[currentKey][0]
+                        if (prevKey === currentKey) {
+                            // const prevIndex: number = prev[prevKey][1]
+                            // const currentIndex: number = current[currentKey][0]
+                            // const newPrev: number = prevIndex + Math.floor(((currentIndex-prevIndex)/2))
+                            // prev[prevKey][1] = newPrev
+                            current[currentKey][0] = prev[prevKey][1] + 1
+                        } else if (splitstrategy===SplitStrategy.PROPORTIONAL) { //just shift pixels excess to sides 
+                            // const segRange = [prevIndexStart + 1, currentIndexEnd]
+                            const rowSeg: number[] = row.slice(prevIndexStart + 1, currentIndexEnd) 
+                            const valuesDict:Object = {}
+                            let prevAdjust: number = 0
+                            let currentAdjust: number = 0
+                            for (const value of rowSeg) {
+                                if(!(value in valuesDict)) {
+                                    valuesDict[value] = 0
+                                } else {
+                                    valuesDict[value] = valuesDict[value] + 1
+                                }
+                            }
+                            if (prevKey in valuesDict) {
+                                prevAdjust = valuesDict[prevKey]
+                            }
+                            if(currentKey in valuesDict) {
+                                currentAdjust = valuesDict[currentKey]
+                            }
+                            if (prevAdjust + currentAdjust !== rowSeg.length) {
+                                if ((prevAdjust + currentAdjust)%2!==0) {
+                                    ++prevAdjust
+                                }
+                                const difference: number = (rowSeg.length - prevAdjust - currentAdjust)/2
+                                prevAdjust = prevAdjust + difference
+                                currentAdjust = currentAdjust + difference
+                            }
+                            prev[prevKey][1] = prev[prevKey][1] + prevAdjust
+                            current[currentKey][0] = current[currentKey][0] - currentAdjust
+                            
+                        } else if (splitstrategy===SplitStrategy.HALF) { //half of first and half of second color
+                            // const prevIndex: number = prev[prevKey][1]
+                            // const currentIndex: number = current[currentKey][0]
+                            const newPrev: number = prevIndexStart + Math.floor(((currentIndexEnd-prevIndexStart)/2))
+                            prev[prevKey][1] = newPrev
+                            current[currentKey][0] = newPrev + 1
+                        } else { //Dominant
+                            if (splitstrategy!==SplitStrategy.DOMINANT) {
+                                console.log("WARNING: splitstrategy did not match any known split strategy defaulting to splitstrategy dominant.")
+                            }
+                            const rowSeg: number[] = row.slice(prevIndexStart + 1, currentIndexEnd) 
+                            const valuesDict:Object = {}
+                            for (const value of rowSeg) {
+                                if(!(value in valuesDict)) {
+                                    valuesDict[value] = 0
+                                } else {
+                                    valuesDict[value] = valuesDict[value] + 1
+                                }
+                            }
+                            if (valuesDict[prevKey] > valuesDict[currentKey]) {
+                                prev[prevKey][1] = prev[prevKey][1] + rowSeg.length
+                            } else {
+                                current[currentKey][0] = current[prevKey][0] - rowSeg.length 
+                            }
+                        }
+                        
+                    }
+                    completeSegments.push(prev)
+                    prev = current    
+                    if (longSegs.isEmpty()) {
+                        completeSegments.push(current)
+                    }
+                }
+                
+            } else {
+               newData.push(row) 
+            }
+            // newData.push(newRow)
+        } ///End processing image data start bundle shit....... If ahve user interface just manditorily ask about different colors maybe limit the split to 2 colors. Could also add little squares at the bottom or something to inidacate the color. So maybe you could select x color designate the color.
+        ///Maybe make it so split doesnt affect all colors? idk would be a hastle. Also generally makes color changing more unform
+        ///now tha tI think of it I could probably make another setting if I wanted to do that for for image editing or what not but I think that I could probably be fine without it for now unless people or /te want to use it
+        ///Front end could also ask about which color to edit and if there is any missing data it auto fills it? sounds kinda slow idk.
+        let bundle: colorsBundled
+
+        if (((fillColors!==undefined&&targetColors!==undefined)||bundledColors!==undefined)&&!((fillColors!==undefined&&targetColors!==undefined)&&bundledColors!==undefined)){
+            bundle = checkValues({fillColors, targetColors, bundledColors})
+        } else if ((fillColors!==undefined&&targetColors===undefined)||(fillColors===undefined&&targetColors!==undefined)) {
+            throw new Error("fillColors and targetColors in conjuction.")
+        } else if ((fillColors!==undefined||targetColors!==undefined)&&bundledColors!==undefined) {
+            throw new Error("Use either fillColors and targetColors or bundledColors.")
+        } else {
+            bundle = this.bundle
+        }
+        
+        this.data = newData
+        ///
+    }
     
+    cleanData() {
+        const newData: number[][] = []
+        for (const [j, row] of this.data.entries()) {
+            const newRow: number[] = this.cleanRow(row)
+            newData.push(newRow)
+        }
+        this.data = newData
+    }
+    cleanRow(row:number[]): number[] {
+        const newRow: number[] = []
+        for (const [i, x] of row.entries()) {
+            // const x: number = row[i]
+            if (i===0) {
+                newRow.push(row[i+1])
+                continue
+            }
+            // const next: number = row[i+1]
+            if(i===row.length-1) {
+                newRow.push(row[i-1])
+                continue
+            }
+            const prev: number = row[i-1]
+            const next: number = row[i+1]
+            if (x!==prev && x!==next && prev===next) {
+                newRow.push(next)
+            } else if (next===-1 && prev!==-1 && x!==-1) {
+                newRow.push(prev)
+            } else {
+                newRow.push(x)
+            }
+            
+        }
+        return newRow
+    }
     graph({width, height, margin}: graphType) {
         if (margin===undefined) {
             margin =  {
@@ -170,13 +344,11 @@ export default class ChartMe {
             }
         }
         if (width===undefined) {
-            width = 3*this.image.width - margin.right - margin.left
+            width = 2*this.image.width - margin.right - margin.left
         }
         if (height===undefined) {
-            height = 3*this.image.height - margin.top - margin.bottom
+            height = 2*this.image.height - margin.top - margin.bottom
         }
-
-        const data = [30, 80, 45, 60];
         
         // const keys = Object.keys(this.processed[0])
         const keys = Object.keys(this.processed[0]).filter(k => k !== "order");
@@ -253,11 +425,35 @@ export default class ChartMe {
 // function preprocess2electricbugalu(processedData) {
 
 // }
+function biggestSegments(row: number[]) {
+    const segmentDict: Object = {}
+    let startIndex: number = 0
+    let endIndex: number = 0
+    for (const [index, value] of row.entries()) {
+        if (!(row[index] in segmentDict)) {
+            segmentDict[row[index]] = new PriorityQueue
+        }
+        if (index===0 || !(segmentDict[index] === segmentDict[index-1])) {
+            if (index!==0) {
+                segmentDict[row[index]].enqueue([startIndex, endIndex], startIndex - endIndex)
+            }
+            startIndex = index
+            endIndex = index //a segement of one pixel will have the same start and end index
+        } else {
+            endIndex = index 
+        }
+    }
+    return segmentDict
+}
+function segmentToRow(segemnts) {
+    
+}
 function datafy(image, bundle: colorsBundled): number[][]{
-    // const bundle: colorsBundled = checkValues({fillColors: fillColors, targetColors: targetColors, fillTarget: fillTarget})
     const data: number[][] = Array.from({ length: image.height}, () => Array(image.length).fill(null))
     // console.log(data)
-
+    // console.log('bundle')
+    // console.log(bundle)
+    // image.write('./images/whyblue.png')
     image.scan(0, 0, image.bitmap.width, image.bitmap.height, (x, y, idx) => {
         // console.log(`x: ${x}, y: ${y}`)
         // data.push()
@@ -268,7 +464,17 @@ function datafy(image, bundle: colorsBundled): number[][]{
         const alpha = image.bitmap.data[idx + 3] //Will always have a value regardless of format jpg or non alpha png. Defaults to 255 for non-alpha.
         const color: colorNumbers = [red, green, blue, alpha]
         if (alpha!==0) {
-            data[y][x] = getFillColor(color, bundle).closestIndex
+            // console.log('color')
+            // console.log(color)
+            // return
+            // console.log(getFillColor(color, bundle))
+            // data[y][x] = getFillColor(color, bundle).closestIndex
+            for (const pair of bundle) {
+                if (pair.fcolor.every((val, i) => val === color[i])){
+                    data[y][x] = pair.order
+                    break
+                }
+            }
         } else {
             data[y][x] = -1
         }
@@ -338,8 +544,6 @@ function getFillColor(currentColor: colorNumbers, colorsZipped: colorsBundled): 
     return {closestColor, closestIndex}
 }
 async function recolorImage (image, bundle: colorsBundled) {
-    // const bundle: colorsBundled = checkValues({fillColors: fillColors, targetColors: targetColors, fillTarget: fillTarget})
-    // const tcolors: colorNumbers[] 
 
     image.scan(0, 0, image.bitmap.width, image.bitmap.height, (x, y, idx) => {
         const red = image.bitmap.data[idx + 0]
@@ -389,7 +593,7 @@ function zipColors (fillColors: colorNumbers[], targetColors: colorNumbers[]): c
 }
    
     
-function checkValues ({fillColors, targetColors, fillTarget}: checkTypes): colorsBundled{
+function checkValues ({fillColors, targetColors, bundledColors}: checkTypes): colorsBundled{
     let fill: colorNumbers[] = []
     let target: colorNumbers[] = []
     
@@ -415,9 +619,9 @@ function checkValues ({fillColors, targetColors, fillTarget}: checkTypes): color
         }
     }
     let ftcolors: (colorsBundled | undefined)
-    if (!(fillTarget===undefined)) { //fillTarget not undefined
+    if (!(bundledColors===undefined)) { //fillTarget not undefined
         ftcolors = [] 
-        for (const [index, tmpcolor] of fillTarget.entries()) {
+        for (const [index, tmpcolor] of bundledColors.entries()) {
             const tmpbundle = {fcolor: colorCorrector(tmpcolor.fcolor), tcolor: colorCorrector(tmpcolor.tcolor), order: index}
             ftcolors.push(tmpbundle)
         }
