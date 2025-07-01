@@ -1,0 +1,8 @@
+src/
+test/
+images/
+.gitignore
+vite.config.ts
+node_modules/
+data/
+data.json

@@ -1,37 +1,39 @@
-import { Jimp, ResizeStrategy } from 'jimp'
+import {JimpInstance, ResizeStrategy} from 'jimp'
+// import {Jimp} from 'jimp'
+// import * as Jimp from 'jimp'
 import colorName from 'color-name'
 import * as d3 from "d3"
 import { SplitStrategy } from './constants'
 
+// type JimpInstance = Jimp.JimpInstance;
+// type JimpInstance = JimpType
+// export enum ResizeStrategy {
+//   NEAREST_NEIGHBOR = "nearestNeighbor",
+//   BILINEAR = "bilinearInterpolation",
+//   BICUBIC = "bicubicInterpolation",
+//   HERMITE = "hermiteInterpolation",
+//   BEZIER = "bezierInterpolation",
+// }
 
-
-type colorEntry = string | [number, number, number] | [number, number, number, number]
-type colorBundle = {
+type colorEntry = string | [number, number, number] | [number, number, number, number];
+type colorBundleType = {
+    [key: number] : colorType
+}
+type colorType = {
     fcolor: colorNumbers,
     tcolor: colorNumbers,
-    order: number
 }
 type colorPreBundled = {
+    [key: number] : colorPreType
+}
+type colorPreType = {
     fcolor: colorEntry,
     tcolor: colorEntry 
-}
-type colorsBundled = colorBundle[]
-type defaultTypes = {
-    fillColors?: colorEntry[],
-    targetColors?: colorEntry[],
-    fillTarget?: colorPreBundled[]
-} 
-type mainTypes = {
-    inputPath: `${string}.${string}`,
-    outputPath: `${string}.${string}`,
-    fillColors?: colorEntry[],
-    targetColors?: colorEntry[],
-    fillTarget?: colorPreBundled[]
 }
 type checkTypes = { 
     fillColors?: colorEntry[],
     targetColors?: colorEntry[],
-    bundledColors?: colorPreBundled[]
+    colorBundle?: colorPreBundled
 } 
 type colorNumbers = [number, number, number, number]
 type distanceColors = {
@@ -40,10 +42,10 @@ type distanceColors = {
 }
 
 type constructorType = {
-    image: any
+    image?: any
     fillColors?: colorEntry[]
     targetColors?: colorEntry[]
-    bundledColors?: colorPreBundled[]
+    colorBundle?: colorPreBundled
     width?: (number|undefined)
     height?: (number|undefined)
 }
@@ -56,50 +58,67 @@ type splitTypes = {
     splits?: number
     fillColors?: colorEntry[]
     targetColors?: colorEntry[]
-    bundledColors?: colorsBundled
+    colorBundle?: colorPreBundled
     splitstrategy?: string
 }
 export default class ChartMe {
     image: any
-    data: number[][]
-    bundle: colorsBundled
+    data: number[][]|undefined
+    bundle: colorBundleType
     // fillColors: colorEntry[]
     // targetColors: colorEntry[]
-    // bundledColors: colorPreBundled[]
-    width: number
-    height: number
+    // bundledColors: colorPreBundled
+    // imageheight: number
+    // imagewidth: number
+    // tocheck: number[]|undefined
+    width: number|undefined
+    height: number|undefined
     // processed: {[key: string]: number}[]
-    processed: {[key: string]: number}[]
+    processed: {[key: string]: number}[] | undefined
     
-    constructor({image, fillColors, targetColors, bundledColors, width, height}: constructorType) {
-        this.bundle = checkValues({fillColors,targetColors, bundledColors})
+    constructor({image, fillColors, targetColors, colorBundle, width, height}: constructorType) {
+        this.bundle = checkValues({fillColors,targetColors, colorBundle})
         this.image = image
+        
         // let newHeight: number
         // let newWidth: number
-        if (width===undefined&&height===undefined) {
-            this.height = image.height/10
-            this.width = image.width/10
-        } else if (width!==undefined&&height===undefined) {
-            this.height = Math.floor(image.height * (width/image.width))
-            this.width = width
-        } else if (width===undefined&&height!==undefined) {
-            this.width = Math.floor(image.width * (height/image.height))
-            this.height = height
-        } else if (width!==undefined&&height!==undefined) {
-            this.width = width
-            this.height = height
-        } else {
-            throw new Error("Width or height are not number")
+        if (image) {
+            if (width===undefined&&height===undefined) {
+                this.height = image.height/10
+                this.width = image.width/10
+            } else if (width!==undefined&&height===undefined) {
+                this.height = Math.floor(image.height * (width/image.width))
+                this.width = width
+            } else if (width===undefined&&height!==undefined) {
+                this.width = Math.floor(image.width * (height/image.height))
+                this.height = height
+            } else if (width!==undefined&&height!==undefined) {
+                this.width = width
+                this.height = height
+            } else {
+                throw new Error("Width or height are not number")
+            }
         }
+        // this.tocheck = [this.height -1 - 136,this.height - 1 - 137, this.height - 1 - 138]
+        // if (this.height) {    
+        //     this.tocheck = [this.height - 1 - 161]
+        // }
         
     }
     async load() {
-        const value = ResizeStrategy.NEAREST_NEIGHBOR
-        await recolorImage(this.image, this.bundle)
-        this.image.resize({w: this.width, h:this.height, mode: value})
-        this.data = datafy(this.image, this.bundle)
-        // console.log(this.data[50])
-        // console.log(this.data[150])
+        if (this.image) {
+            const value = ResizeStrategy.NEAREST_NEIGHBOR
+            await recolorImage(this.image, this.bundle)
+            this.image.resize({w: this.width, h:this.height, mode: value})
+            this.data = datafy(this.image, this.bundle)
+        } else {
+            throw new Error("Image is undefined. If you are loading from file no need to call load(). Just use loadFile()")
+        }
+        // const value = ResizeStrategy.NEAREST_NEIGHBOR
+        // await recolorImage(this.image, this.bundle)
+        // this.image.resize({w: this.width, h:this.height, mode: value})
+        // this.data = datafy(this.image, this.bundle)
+
         return this
     }
     // async chart (inputPath: `${string}.${string}`='./image/testImage.png', outputPath: `${string}.${string}`='./data/data.txt', {fillColors, targetColors, fillTarget}: defaultTypes) {
@@ -126,50 +145,71 @@ export default class ChartMe {
         // graphData()
         
     }
-    
-    // preprocess() {
-    //     const processedArr: {[key: string]: number}[] = []
-    //     // console.log(this.bundle)
-    //     const length: number = Object.keys(this.bundle).length
-    //     // console.log(length)
-    //     for (const [j, row] of this.data.entries()) {
-    //         const rowData: {[key: string]: number} = Object.fromEntries(Array.from({length}, (_,i) => [i.toString(),0]))
-    //         // console.log(rowData)
-    //         for (const x of row) {
-    //             // let rownum: number = rowData[x.toString()]
-    //             if (x !== -1 ){
-    //                 rowData[x.toString()] = x + 1
-    //             } 
-    //         }
-    //         rowData.order = j
-    //         processedArr.push(rowData)
-    //     }
-    //     this.processed = processedArr
-    // }
+
     preprocess() {
+        if (!this.data) {
+            throw new Error("this.data undefined try calling load after calling new ChartMe")
+        }
         const processedArr: {[key: string]: number}[] = []
-        // console.log(this.bundle)
-        const length: number = Object.keys(this.bundle).length
-        // console.log(length)
+        const bundlekeys: string[] = Object.keys(this.bundle)
+        // let prevsum: number|undefined 
         for (const [j, row] of this.data.entries()) {
-            const rowData: {[key: string]: number} = Object.fromEntries(Array.from({length}, (_,i) => [i.toString(),0]))
-            // console.log(rowData)
+            const rowData: {[key: string]: number} = Object.fromEntries(bundlekeys.map(key => [key, 0]))
             for (const x of row) {
                 // let rownum: number = rowData[x.toString()]
                 if (x !== -1 ){
                     rowData[x.toString()] = rowData[x.toString()] + 1
                 } 
             }
-            rowData.order = this.image.height - j
+            // const currentsum: number = Object.values(rowData).reduce((acc, val) => acc + val, 0)
+            // const unique: number[] = Array.from(new Set(row))
+            // const nums: string = unique.map(n => `num ${n}: ${row.filter(v=>v===n).length}`).join(", ")
+            // prevsum = currentsum
+            rowData.order = this.image.height - j - 1
             processedArr.push(rowData)
         }
         this.processed = processedArr
         // this.processed = preprocess2electricbugalu(processedArr)
     }
-    splitColors({splits, fillColors, targetColors, bundledColors, splitstrategy}: splitTypes) {
+    async saveFile(path: string) {
+        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+            return Promise.reject(
+                new Error('saveFile() can only run in Node.js')
+            );
+        }
+        const towrite: Object = {processed: this.processed, bundle: this.bundle, height: this.height, width: this.width}
+        const { saveJSON } = await import("./node-utils");
+        await saveJSON(towrite, path);        
+    }
+    async loadFile(path: string) {
+        try {
+            const res = await fetch(path);
+            const data = await res.json();
+            this.processed = data['processed']
+            this.bundle = data['bundle']
+            this.height = data['height']
+            this.width = data['width']
+        } catch(err){
+            console.error("Error reading JSON:", err)
+        }
+        
+    }
+    splitColors({splits, fillColors, targetColors, colorBundle, splitstrategy}: splitTypes) {
         // const newSplits: number 
 
-        
+        let newbundle: colorBundleType
+        if (!this.data) {
+            throw new Error("this.data undefined try calling load() if you are loading from image")
+        }
+        if (((fillColors!==undefined&&targetColors!==undefined)||colorBundle!==undefined)&&!((fillColors!==undefined&&targetColors!==undefined)&&colorBundle!==undefined)){
+            newbundle = checkValues({fillColors, targetColors, colorBundle})
+        } else if ((fillColors!==undefined&&targetColors===undefined)||(fillColors===undefined&&targetColors!==undefined)) {
+            throw new Error("fillColors and targetColors in conjuction.")
+        } else if ((fillColors!==undefined||targetColors!==undefined)&&colorBundle!==undefined) {
+            throw new Error("Use either fillColors and targetColors or bundledColors.")
+        } else {
+            newbundle = this.bundle
+        }
             
         let newSplits: number
         if (splits === undefined) {
@@ -179,26 +219,72 @@ export default class ChartMe {
         }
         const newData: number[][] = []
         //Start processing Image info
-        for (const [j, row] of this.data.entries()) {
-            const segments = biggestSegments(row) ///we will iterate through when we reach a new color we will measure how far it goes set a range then with the new color will do the same we will have a dict color index then for each index it will be an array of tuples with the range we graph the largest range for each color we will order them based smallest index then if there are gaps we will replace the beginning of the prev segment with half of whats missing and the beginning of next subtract half of whats missing
-            const longSegs: PriorityQueue<Object> = new PriorityQueue
-            for (const k of Object.keys(segments)) {
-                for (let i; i < newSplits ; i++) {
-                    const dequed: number[] | undefined = segments[k].dequeue()
-                    if (!(dequed === undefined)) {
-                        const tmp: {[key: string]: number[]} = {[k]: dequed}
+        if (Object.values(SplitStrategy).includes(splitstrategy as SplitStrategy)) {
+                console.log("WARNING: splitstrategy did not match any known split strategy defaulting to splitstrategy dominant.")
+            }
+        for (const [_, row] of this.data.entries()) {
+            const segments: {[key: number]: PriorityQueue<[number,number]>} = biggestSegments(row)
 
+            const longSegs: PriorityQueue<{[key: string]: number[]}> = new PriorityQueue
+            for (const k of Object.keys(segments)) {
+                for (let i=0; i < newSplits + 1; i++) {
+                    const dequed: number[] | undefined = segments[Number(k)].dequeue()
+                    if (!(dequed === undefined)) {
+                        const tmp: {[key: string]: number[]} = {[k]: dequed}//check these lines longSegs is empty
                         longSegs.enqueue(tmp, dequed[0])
                     } else  {
                         break
                     } //Can proprotionately adjust so for every white in a segement I just add a white in length to the white segement in that area or I could do the most prominent color in the region or some combo of the two
                 }///Have to figure out how to maintain shape of object with graph could be cutting off edges if segments arent long there
             }
-            const completeSegments:Object[] = []
+            let prevcolorinfo: Object|undefined
+            let prevkey: string | undefined
+            for (let i=0; i < longSegs.data.length; i++) {
+                const colorinfo: Object = longSegs.data[i].item
+                const currentkey: string = Object.keys(colorinfo)[0]
+                if (prevcolorinfo!==undefined && (currentkey===prevkey)) {
+                  
+                    if (longSegs.data[i].item[currentkey][0] > longSegs.data[i-1].item[currentkey][0]) {
+                        longSegs.data[i].item[currentkey][0] = longSegs.data[i-1].item[currentkey][0]
+                    }
+               
+                    
+                    if (longSegs.data[i].item[currentkey][1] < longSegs.data[i-1].item[currentkey][1]) {
+                        longSegs.data[i].item[currentkey][1] = longSegs.data[i-1].item[currentkey][1]
+                    }
+                    
+                    longSegs.data.splice(i-1, 1)
+                    longSegs.data[i-1].priority = longSegs.data[i-1].item[currentkey][0]
+                    const dequed: number[] | undefined = segments[Number(currentkey)].dequeue()
+                    if (!(dequed === undefined)) {
+                        const tmp: {[key: string]: number[]} = {[currentkey]: dequed}//check these lines longSegs is empty
+                        longSegs.enqueue(tmp, dequed[0])
+                    }
+                    i = -1
+                    prevcolorinfo = undefined
+                    prevkey = undefined
+                } else if (prevcolorinfo!==undefined && prevkey!==undefined && longSegs.data[i].item[currentkey][1] < longSegs.data[i-1].item[prevkey][1]) {
+                    longSegs.data.splice(i, 1)
+                    
+                    i = -1
+                    prevcolorinfo = undefined
+                    prevkey = undefined
+                    // prevcolorinfo = colorinfo
+                    // prevkey = currentkey
+                } else {
+ 
+                    prevcolorinfo = colorinfo
+                    prevkey = currentkey
+                }
+            }
+            
             let prev = longSegs.dequeue()
+
+             const completeSegments:{[key: string]: number[]}[] = []
             if (!longSegs.isEmpty() && prev!==undefined) {
                 while (!longSegs.isEmpty()) {
                     const current = longSegs.dequeue()
+                    
                     if (current===undefined) {
                         throw new Error("Segment processing error")
                     } else {
@@ -206,16 +292,15 @@ export default class ChartMe {
                         const currentKey: string = Object.keys(current)[0]
                         const prevIndexStart: number = prev[prevKey][1]
                         const currentIndexEnd: number = current[currentKey][0]
+                        
+                        
                         if (prevKey === currentKey) {
-                            // const prevIndex: number = prev[prevKey][1]
-                            // const currentIndex: number = current[currentKey][0]
-                            // const newPrev: number = prevIndex + Math.floor(((currentIndex-prevIndex)/2))
-                            // prev[prevKey][1] = newPrev
+  
                             current[currentKey][0] = prev[prevKey][1] + 1
+
                         } else if (splitstrategy===SplitStrategy.PROPORTIONAL) { //just shift pixels excess to sides 
-                            // const segRange = [prevIndexStart + 1, currentIndexEnd]
                             const rowSeg: number[] = row.slice(prevIndexStart + 1, currentIndexEnd) 
-                            const valuesDict:Object = {}
+                            const valuesDict:{[key: number]: number} = {}
                             let prevAdjust: number = 0
                             let currentAdjust: number = 0
                             for (const value of rowSeg) {
@@ -226,10 +311,10 @@ export default class ChartMe {
                                 }
                             }
                             if (prevKey in valuesDict) {
-                                prevAdjust = valuesDict[prevKey]
+                                prevAdjust = valuesDict[Number(prevKey)]
                             }
                             if(currentKey in valuesDict) {
-                                currentAdjust = valuesDict[currentKey]
+                                currentAdjust = valuesDict[Number(currentKey)]
                             }
                             if (prevAdjust + currentAdjust !== rowSeg.length) {
                                 if ((prevAdjust + currentAdjust)%2!==0) {
@@ -241,19 +326,13 @@ export default class ChartMe {
                             }
                             prev[prevKey][1] = prev[prevKey][1] + prevAdjust
                             current[currentKey][0] = current[currentKey][0] - currentAdjust
-                            
                         } else if (splitstrategy===SplitStrategy.HALF) { //half of first and half of second color
-                            // const prevIndex: number = prev[prevKey][1]
-                            // const currentIndex: number = current[currentKey][0]
                             const newPrev: number = prevIndexStart + Math.floor(((currentIndexEnd-prevIndexStart)/2))
                             prev[prevKey][1] = newPrev
                             current[currentKey][0] = newPrev + 1
                         } else { //Dominant
-                            if (splitstrategy!==SplitStrategy.DOMINANT) {
-                                console.log("WARNING: splitstrategy did not match any known split strategy defaulting to splitstrategy dominant.")
-                            }
                             const rowSeg: number[] = row.slice(prevIndexStart + 1, currentIndexEnd) 
-                            const valuesDict:Object = {}
+                            const valuesDict:{[key: number]: number} = {}
                             for (const value of rowSeg) {
                                 if(!(value in valuesDict)) {
                                     valuesDict[value] = 0
@@ -261,79 +340,90 @@ export default class ChartMe {
                                     valuesDict[value] = valuesDict[value] + 1
                                 }
                             }
-                            if (valuesDict[prevKey] > valuesDict[currentKey]) {
+                            
+                            if (valuesDict[Number(prevKey)] > valuesDict[Number(currentKey)]) {
                                 prev[prevKey][1] = prev[prevKey][1] + rowSeg.length
                             } else {
-                                current[currentKey][0] = current[prevKey][0] - rowSeg.length 
+                                current[currentKey][0] = current[currentKey][0] - rowSeg.length 
                             }
+  
                         }
-                        
+                
                     }
+                    
                     completeSegments.push(prev)
                     prev = current    
-                    if (longSegs.isEmpty()) {
+                    if (longSegs.isEmpty()) {       
                         completeSegments.push(current)
                     }
                 }
                 
+            } else if (prev) {
+                completeSegments.push(prev)
             } else {
-               newData.push(row) 
+                throw new Error("prev empty")
             }
+            
+            const arrayToReturn:number[] = []
+            // const arraySegmentUsed: string[] = []
+            const keysInUse: number[] = []
+            for(const segment of completeSegments) {
+                const key = Object.keys(segment)[0]
+                const numkey = Number(key)
+                const range = segment[key]
+
+                if(!keysInUse.includes(numkey)&&keysInUse.every(n=> numkey > n)) {
+                    keysInUse.push(numkey)
+                    arrayToReturn.push(...Array(range[1] - range[0] + 1).fill(numkey))
+                } else {
+                    for (const newkey of Object.keys(newbundle)) {
+                        let newnumkey: number = numkey
+                        if (newkey===key) {
+                          
+                            while(keysInUse.includes(newnumkey)||!keysInUse.every(n=> newnumkey > n)) {
+                                newnumkey += 200        
+                            }
+                            keysInUse.push(newnumkey)
+                            arrayToReturn.push(...Array(range[1] - range[0] + 1).fill(newnumkey))   
+                            this.bundle[newnumkey] = newbundle[Number(key)]
+                            break
+                        }
+                    }
+                }
+            } //Gotta assign bundle stuff before hand create new order stuff
+            newData.push(arrayToReturn)
+            
             // newData.push(newRow)
         } ///End processing image data start bundle shit....... If ahve user interface just manditorily ask about different colors maybe limit the split to 2 colors. Could also add little squares at the bottom or something to inidacate the color. So maybe you could select x color designate the color.
         ///Maybe make it so split doesnt affect all colors? idk would be a hastle. Also generally makes color changing more unform
         ///now tha tI think of it I could probably make another setting if I wanted to do that for for image editing or what not but I think that I could probably be fine without it for now unless people or /te want to use it
         ///Front end could also ask about which color to edit and if there is any missing data it auto fills it? sounds kinda slow idk.
-        let bundle: colorsBundled
-
-        if (((fillColors!==undefined&&targetColors!==undefined)||bundledColors!==undefined)&&!((fillColors!==undefined&&targetColors!==undefined)&&bundledColors!==undefined)){
-            bundle = checkValues({fillColors, targetColors, bundledColors})
-        } else if ((fillColors!==undefined&&targetColors===undefined)||(fillColors===undefined&&targetColors!==undefined)) {
-            throw new Error("fillColors and targetColors in conjuction.")
-        } else if ((fillColors!==undefined||targetColors!==undefined)&&bundledColors!==undefined) {
-            throw new Error("Use either fillColors and targetColors or bundledColors.")
-        } else {
-            bundle = this.bundle
-        }
-        
+        // console.log('this.data')
+        // this.data.forEach(row => console.log(JSON.stringify(row)));
+        // console.log('newData')
+        // for (const [i, row] of newData.entries()) {
+        //     console.log(i)
+        //     console.log(JSON.stringify(row))
+        // }
+        // console.log('thisbundle')
+        // console.log(this.bundle)
         this.data = newData
         ///
     }
     
     cleanData() {
-        const newData: number[][] = []
-        for (const [j, row] of this.data.entries()) {
-            const newRow: number[] = this.cleanRow(row)
-            newData.push(newRow)
+        if (this.data) {
+            const newData: number[][] = []
+            for (const [_, row] of this.data.entries()) {
+                const newRow: number[] = cleanRow(row)
+                newData.push(newRow)
+            }
+            this.data = newData
+        } else {
+            throw new Error("this.data undefined")
         }
-        this.data = newData
     }
-    cleanRow(row:number[]): number[] {
-        const newRow: number[] = []
-        for (const [i, x] of row.entries()) {
-            // const x: number = row[i]
-            if (i===0) {
-                newRow.push(row[i+1])
-                continue
-            }
-            // const next: number = row[i+1]
-            if(i===row.length-1) {
-                newRow.push(row[i-1])
-                continue
-            }
-            const prev: number = row[i-1]
-            const next: number = row[i+1]
-            if (x!==prev && x!==next && prev===next) {
-                newRow.push(next)
-            } else if (next===-1 && prev!==-1 && x!==-1) {
-                newRow.push(prev)
-            } else {
-                newRow.push(x)
-            }
-            
-        }
-        return newRow
-    }
+    
     graph({width, height, margin}: graphType) {
         if (margin===undefined) {
             margin =  {
@@ -344,21 +434,17 @@ export default class ChartMe {
             }
         }
         if (width===undefined) {
-            width = 2*this.image.width - margin.right - margin.left
+            width = 3*this.image.width - margin.right - margin.left
         }
         if (height===undefined) {
-            height = 2*this.image.height - margin.top - margin.bottom
+            height = 3*this.image.height - margin.top - margin.bottom
         }
-        
-        // const keys = Object.keys(this.processed[0])
+        if (!this.processed || !this.width || !this.height) {
+            throw new Error("this.processed, this.width, or this.height undefined undefined")
+            }
+
         const keys = Object.keys(this.processed[0]).filter(k => k !== "order");
-        const mycolors = Array.from(this.bundle, (pair, i) => `rgba(${pair.fcolor.join(",")})`)
-        // const fillColors = Object.keys
-        // console.log('keys')
-        // console.log(keys)
-        // const groups = Array.from({ length: this.image.height }, (_, i) => i.toString());
-        // const stackData = stack(this.processed)
-        // console.log(keys)
+        const mycolors = Object.values(this.bundle).map(pair => `rgba(${pair.fcolor.join(",")})`)
         const svg = d3.select("#my_dataviz")
         .append("svg")
             // .attr("width", 150)
@@ -373,17 +459,19 @@ export default class ChartMe {
         .domain(keys)
         // .range(["rgba(255,0,0,255)", "rgba(255,153,0,255)"].reverse());
         .range(mycolors);
-        // .range(['#e41a1c','#377eb8','#4daf4a'])
-        // console.log(this.image.height)
 
         var y = d3.scaleBand()
         .domain(this.processed.map(d => d.order.toString()).reverse())
-        .range([ height,0 ]);
+        .range([ height,0 ]).padding(.40);
          svg.append("g")
-        .call(d3.axisLeft(y));
 
-         var x = d3.scaleLinear()
-            .domain([0, this.image.width])
+        .call(d3.axisLeft(y)
+        .tickFormat(d => (+d % 20 === 0 ? d: "")))
+        .selectAll(".tick line")
+        .style("display", (_, i) => (i%20===0?"block":"none"));
+        // var yAxis = d3.axisLeft(y)
+        var x = d3.scaleLinear()
+            .domain([0, this.width])
             .range([0, width])
         svg.append("g")
             .attr("transform", "translate(0," + height + ")")
@@ -400,15 +488,16 @@ export default class ChartMe {
             .selectAll("rect")
             .data(d => d)
             .enter().append("rect")
-                .attr("x", d => x(d[0]))
-                
+                // .attr("x", d => x(d[0]))
+                .attr("x", 0)                
                 .attr("y", d => y(d.data.order.toString())!)
-                // .attr("y", d => console.log(y(d.data.order.toString())!))
-
-                .attr("height", y.bandwidth())
-                // .attr("width", d => console.log(d))
-                // .attr("width", d => x(d[1]- d[0]))
                 .attr("width", d => x(d[1]) - x(d[0]))
+                .attr("height", y.bandwidth())
+                .transition()
+                .duration(1800)
+                .attr("x", d => x(d[0]))
+                .attr("width", d => x(d[1]) - x(d[0]))
+        
                 // .attr("width", d => x(d[1]))
                 
         // .attr("height", d => y(d[0]) - y(d[1]))
@@ -425,38 +514,37 @@ export default class ChartMe {
 // function preprocess2electricbugalu(processedData) {
 
 // }
-function biggestSegments(row: number[]) {
-    const segmentDict: Object = {}
+
+function biggestSegments(row: number[]): {[key: number]: PriorityQueue<[number, number]>} {
+    const segmentDict: {[key: number]: PriorityQueue<[number, number]>} = {}
     let startIndex: number = 0
     let endIndex: number = 0
-    for (const [index, value] of row.entries()) {
+    for (const [index, _] of row.entries()) {
         if (!(row[index] in segmentDict)) {
-            segmentDict[row[index]] = new PriorityQueue
+            segmentDict[row[index]] = new PriorityQueue<[number, number]>
         }
-        if (index===0 || !(segmentDict[index] === segmentDict[index-1])) {
+        if (index===0 || (row[index] !== row[index-1])) {
             if (index!==0) {
-                segmentDict[row[index]].enqueue([startIndex, endIndex], startIndex - endIndex)
+                segmentDict[row[index-1]].enqueue([startIndex, endIndex], startIndex - endIndex)
             }
             startIndex = index
             endIndex = index //a segement of one pixel will have the same start and end index
         } else {
             endIndex = index 
+            if (index===row.length-1) {
+                segmentDict[row[index-1]].enqueue([startIndex, endIndex], startIndex - endIndex)
+            }
         }
     }
     return segmentDict
 }
-function segmentToRow(segemnts) {
-    
-}
-function datafy(image, bundle: colorsBundled): number[][]{
-    const data: number[][] = Array.from({ length: image.height}, () => Array(image.length).fill(null))
-    // console.log(data)
-    // console.log('bundle')
-    // console.log(bundle)
+
+function datafy(image: JimpInstance, bundle: colorBundleType): number[][]{
+    const data: number[][] = Array.from({ length: image.height}, () => Array(image.width).fill(null))
+
     // image.write('./images/whyblue.png')
     image.scan(0, 0, image.bitmap.width, image.bitmap.height, (x, y, idx) => {
-        // console.log(`x: ${x}, y: ${y}`)
-        // data.push()
+
 
         const red = image.bitmap.data[idx + 0]
         const green = image.bitmap.data[idx+1]
@@ -464,14 +552,10 @@ function datafy(image, bundle: colorsBundled): number[][]{
         const alpha = image.bitmap.data[idx + 3] //Will always have a value regardless of format jpg or non alpha png. Defaults to 255 for non-alpha.
         const color: colorNumbers = [red, green, blue, alpha]
         if (alpha!==0) {
-            // console.log('color')
-            // console.log(color)
-            // return
-            // console.log(getFillColor(color, bundle))
-            // data[y][x] = getFillColor(color, bundle).closestIndex
-            for (const pair of bundle) {
+            for (const key of Object.keys(bundle)) {
+                const pair: colorType = bundle[Number(key)] 
                 if (pair.fcolor.every((val, i) => val === color[i])){
-                    data[y][x] = pair.order
+                    data[y][x] = Number(key)
                     break
                 }
             }
@@ -483,17 +567,16 @@ function datafy(image, bundle: colorsBundled): number[][]{
     // image.write('./')
     return data
 }
-function euclideanDistance(a, b) {
+function euclideanDistance(a: number[], b: number[]) {
     if (a.length !== b.length) {
       throw new Error("Points must have the same number of dimensions");
     }
-  
     return Math.sqrt(
       a.reduce((sum, val, i) => sum + (val - b[i]) ** 2, 0)
     );
 }
 class PriorityQueue<T> {
-    private data: { item: T, priority: number }[] = [];
+    data: { item: T, priority: number }[] = [];
   
     enqueue(item: T, priority: number) {
       this.data.push({ item, priority });
@@ -528,24 +611,25 @@ type getFillColorType = {
     closestColor: colorNumbers, 
     closestIndex: number
 }
-function getFillColor(currentColor: colorNumbers, colorsZipped: colorsBundled): getFillColorType{
+function getFillColor(currentColor: colorNumbers, colorsZipped: colorBundleType): getFillColorType{
     let closestColor: colorEntry = [0, 0, 0, 0]
     let closestDistance: number = 500
     let closestIndex: number = 0
-    for (const targetBundle of colorsZipped) {
+    for (const key of Object.keys(colorsZipped)) {
+        const targetBundle: colorType = colorsZipped[Number(key)]
         const targetColor: colorNumbers = targetBundle.tcolor
         const tmpdistflat = distanceFlattened({currentColor, targetColor})
         if (closestDistance > tmpdistflat) {
             closestDistance = tmpdistflat
             closestColor = targetBundle.fcolor
-            closestIndex = targetBundle.order
+            closestIndex = Number(key)
         }
     }
     return {closestColor, closestIndex}
 }
-async function recolorImage (image, bundle: colorsBundled) {
+async function recolorImage (image: JimpInstance, bundle: colorBundleType) {
 
-    image.scan(0, 0, image.bitmap.width, image.bitmap.height, (x, y, idx) => {
+    image.scan(0, 0, image.bitmap.width, image.bitmap.height, (_, __, idx) => {
         const red = image.bitmap.data[idx + 0]
         const green = image.bitmap.data[idx+1]
         const blue = image.bitmap.data[idx+2]
@@ -569,8 +653,8 @@ async function recolorImage (image, bundle: colorsBundled) {
     
 
 
-function zipColors (fillColors: colorNumbers[], targetColors: colorNumbers[]): colorsBundled{
-    let zip: colorsBundled = []
+function zipColors (fillColors: colorNumbers[], targetColors: colorNumbers[]): colorBundleType{
+    let zip: colorBundleType = {}
     const pq: PriorityQueue<number[]> = new PriorityQueue()
     for (const [row, fill] of fillColors.entries()) {
         for (const [col, target] of targetColors.entries()) {
@@ -583,7 +667,7 @@ function zipColors (fillColors: colorNumbers[], targetColors: colorNumbers[]): c
     while (colsInUse.length < targetColors.length) {
         const [row, col] = pq.dequeue() ?? []
         if(!(colsInUse.includes(col) || rowsInUse.includes(row))){
-            zip.push({fcolor: fillColors[row], tcolor: targetColors[col], order: colsInUse.length})
+            zip[colsInUse.length] = {fcolor: fillColors[row], tcolor: targetColors[col]}
             colsInUse.push(col)
             rowsInUse.push(row)
         }
@@ -593,7 +677,7 @@ function zipColors (fillColors: colorNumbers[], targetColors: colorNumbers[]): c
 }
    
     
-function checkValues ({fillColors, targetColors, bundledColors}: checkTypes): colorsBundled{
+function checkValues ({fillColors, targetColors, colorBundle}: checkTypes): colorBundleType{
     let fill: colorNumbers[] = []
     let target: colorNumbers[] = []
     
@@ -618,42 +702,66 @@ function checkValues ({fillColors, targetColors, bundledColors}: checkTypes): co
             target[i] = colorCorrector(targetColors[i])
         }
     }
-    let ftcolors: (colorsBundled | undefined)
-    if (!(bundledColors===undefined)) { //fillTarget not undefined
-        ftcolors = [] 
-        for (const [index, tmpcolor] of bundledColors.entries()) {
-            const tmpbundle = {fcolor: colorCorrector(tmpcolor.fcolor), tcolor: colorCorrector(tmpcolor.tcolor), order: index}
-            ftcolors.push(tmpbundle)
+    let ftcolors: (colorBundleType | undefined)
+    if (!(colorBundle===undefined)) { //fillTarget not undefined
+        ftcolors = {} 
+        for (const key of Object.keys(colorBundle)) {
+            const tmpcolor: colorPreType = colorBundle[Number(key)] 
+            const tmpbundle = {fcolor: colorCorrector(tmpcolor.fcolor), tcolor: colorCorrector(tmpcolor.tcolor)}
+            ftcolors[Number(key)] = tmpbundle
         }
-    } else {
-        ftcolors = undefined
-    }
+    } 
     
     if ((fill.length === 0) && (target.length === 0) && !(ftcolors === undefined)) {
         return ftcolors
     } else if (!(fill.length === 0) && !(target.length === 0) && !(ftcolors === undefined)) {
         // const tmpArray = [...ftcolors, ...zipColors(fill, target)]
-        const tcolorSet = new Set(ftcolors.map(obj => obj.tcolor))
-        const zipped = zipColors(fill, target).filter(obj=> !tcolorSet.has(obj.tcolor))
-        return [...ftcolors, ...zipped]
+        const tcolorSet = new Set(Object.entries(ftcolors).map(([_, obj]) => obj.tcolor))
+        const zipped: colorBundleType = Object.fromEntries(Object.entries(zipColors(fill, target)).filter(([_, obj])=> !tcolorSet.has(obj.tcolor)))
+        return {...zipped, ...ftcolors}
         
     } else if (!(fill.length === 0) && !(target.length === 0) && (ftcolors === undefined)) {
         return zipColors(fill, target)
     } else { //if ((fillColors === undefined) && (targetColors === undefined) && (ftcolors === undefined))
-        return [
-            {
-                'tcolor': [...colorName['white'], 255],
-                'fcolor': [...colorName['white'], 255],
-                'order': 0
-            },
-            {
-                'tcolor': [...colorName['black'], 255],
-                'fcolor': [...colorName['black'], 255],
-                'order': 1
-            },
-        ]
+        const color0: colorType = {
+                    'tcolor': [...colorName['white'], 255],
+                    'fcolor': [...colorName['white'], 255],
+                }
+        const color1: colorType = {
+                    'tcolor': [...colorName['black'], 255],
+                    'fcolor': [...colorName['black'], 255],
+                }
+        const returnbundle = {0: color0, 1: color1}
+        
+        return returnbundle
     }
 }
+function cleanRow(row:number[]): number[] {
+        const newRow: number[] = []
+        for (const [i, x] of row.entries()) {
+            // const x: number = row[i]
+            if (i===0) {
+                newRow.push(row[i+1])
+                continue
+            }
+            // const next: number = row[i+1]
+            if(i===row.length-1) {
+                newRow.push(row[i-1])
+                continue
+            }
+            const prev: number = row[i-1]
+            const next: number = row[i+1]
+            if (x!==prev && x!==next && prev===next) {
+                newRow.push(next)
+            } else if (next===-1 && prev!==-1 && x!==-1) {
+                newRow.push(prev)
+            } else {
+                newRow.push(x)
+            }
+            
+        }
+        return newRow
+    }
 function isTripleOrQuad( arr: any ): arr is [number, number, number] | [number, number, number, number] {
     return (
       Array.isArray(arr) &&
@@ -667,10 +775,11 @@ function isTripleOrQuad( arr: any ): arr is [number, number, number] | [number, 
       )
     );
   }
+type ColorKey = keyof typeof colorName
 function colorCorrector (color: colorEntry) : colorNumbers {
     let fin_color: colorNumbers
     if (typeof color === "string") {
-        const tmpcolor: [number, number, number] = colorName[color]
+        const tmpcolor: [number, number, number] = colorName[color as ColorKey]
         fin_color = [...tmpcolor, 255]
     } else if (isTripleOrQuad(color)) {
         if (color.length === 3) {

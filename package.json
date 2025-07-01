@@ -1,14 +1,14 @@
 {
   "name": "chartme",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Turn an image into a chart.",
-  "main": "ChartMe.ts",
+  "main": "dist/ChartMe.js",
+  "types": "dist/ChartMe.d.ts",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "tsc --p tsconfig.app.json"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,11 @@
   "keywords": [
     "Chart",
     "Face"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "author": "CasFre4",
   "license": "MIT",
@@ -32,7 +37,10 @@
   "devDependencies": {
     "@types/color-name": "^2.0.0",
     "@types/d3": "^7.4.3",
+    "@types/jimp": "^0.2.1",
+    "@types/pngjs": "^6.0.5",
     "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
     "vite": "^6.3.5"
   }
 }
