@@ -1,6 +1,6 @@
 {
   "name": "chartme",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Turn an image into a chart.",
   "main": "dist/ChartMe.js",
   "types": "dist/ChartMe.d.ts",
@@ -21,7 +21,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "images"
   ],
   "author": "CasFre4",
   "license": "MIT",
