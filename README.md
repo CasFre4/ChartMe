@@ -48,13 +48,18 @@ chart.saveFile('./data.json')
 </details>
 
 ### 3. Displaying graph
-#### With saved file
+#### With saved file and React
 ```js
-const chart = new ChartMe({})
-await chart.loadFile('./data.json')
-chart.graph({height: 190, width: 120})//height and width define size of chart
+const containerRef = useRef<HTMLDivElement>(null);
+useEffect(() => {
+    if (containerRef.current) {
+        const chart = new ChartMe({})
+        await chart.loadFile('./data.json')
+        chart.graph({container: containerRef.current, height: 190, width: 120})//height and width define size of chart
+    }
+}, []);
 ```
-#### Without save file
+#### Without save file and using getElementById
 ```js
 const image = await Jimp.read(imagePath)
 const chart = await new ChartMe({image: image, colorBundle: [
@@ -66,7 +71,10 @@ const chart = await new ChartMe({image: image, colorBundle: [
 chart.cleanData()
 chart.splitColors({splits: 3})
 chart.preprocess()
-chart.graph({height: 190, width: 120})
+const container = document.getElementById('my_dataviz')
+if (container && container instanceof HTMLDivElement) {
+    chart.graph({container: container, height: 190, width: 120})
+}
 ```
 <details>
 <summary> Click to view chart </summary></br>
@@ -90,7 +98,10 @@ chart.splitColors({splits: 4, colorBundle:
   {tcolor: [150, 150, 150, 255], fcolor: 'blue'},
   {tcolor: [100,100,100,255], fcolor: 'magenta'}]})
 chart.preprocess()
-chart.graph({height: 190, width: 120})
+const container = document.getElementById('my_dataviz')
+if (container && container instanceof HTMLDivElement) {
+    chart.graph({container: containerRef.current, height: 190, width: 120})
+}
 ```
 <details>
 <summary> Click to view chart </summary></br>

@@ -50,6 +50,7 @@ type constructorType = {
     height?: (number|undefined)
 }
 type graphType = {
+        container: HTMLDivElement
         width?: number
         height?: number
         margin?: {[key: string]: number}
@@ -424,7 +425,7 @@ export default class ChartMe {
         }
     }
     
-    graph({width, height, margin}: graphType) {
+    graph({container, width, height, margin}: graphType) {
         if (margin===undefined) {
             margin =  {
                 top: 20,
@@ -475,8 +476,10 @@ export default class ChartMe {
             .range([0, width])
         svg.append("g")
             .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x));
-
+            .call(d3.axisBottom(x)
+            .tickFormat(d => (+d % 20 === 0 ? d.toString(): "")))
+            .selectAll(".tick line")
+            .style("display", (_, i) => (i%20===0?"block":"none"));
         // var groups = d3.map(data, d => d.)
         const stackData = d3.stack().keys(keys)(this.processed)
 

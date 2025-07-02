@@ -3,7 +3,7 @@ import ChartMe from '../src/ChartMe';
 import { Jimp } from 'jimp';
 // import { default as Jimp} from 'jimp'
 // async function main () {
-const imagePath = './images/testImage.png'
+const imagePath = './nongitimages/testImage.png'
 const image = await Jimp.read(imagePath)
 // get the image path from command line arguments
 // const imagePath = process.argv[2];
@@ -74,14 +74,16 @@ chart.splitColors({splits: 3})///change split so that it creates a color for eve
 
 chart.preprocess()
 
-chart.saveFile('./data.json')
+// chart.saveFile('./data.json')
 
 
 // const chart = new ChartMe({})
 // await chart.loadFile('./data.json')
 // console.log(chart.processed)
-
-// chart.graph({height: 250 - 20 - 40, width: 180 - 20 - 40})
+const container = document.getElementById('my_dataviz')
+if (container && container instanceof HTMLDivElement) {
+  chart.graph({container: container, height: 250 - 20 - 40, width: 180 - 20 - 40})
+}
 // .catch(err => {
 //   console.error('Error:', err);
 // });
