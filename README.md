@@ -41,6 +41,7 @@ chart.saveFile('./data.json')
 <summary> Click to view chart </summary>
 ![Example Chart](https://raw.githubusercontent.com/CasFre4/ChartMe/refs/heads/master/images/greenyellowredblack.png)
 </details>
+
 ### 3. Displaying graph
 #### With saved file
 ```js
