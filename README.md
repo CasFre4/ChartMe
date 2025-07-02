@@ -8,6 +8,10 @@
 - Saving and loading preprocessed graph data.
 - Recoloring following same colored segments.
 
+## Related Links
+* GitHub: https://github.com/CasFre4/EIA-bulk
+* npm: https://www.npmjs.com/package/chartme
+
 ## Installation
 
 You can install the `chartme` package using `npm`:
@@ -93,3 +97,10 @@ chart.graph({height: 190, width: 120})
 
 ![Example Chart](https://raw.githubusercontent.com/CasFre4/ChartMe/refs/heads/master/images/splitgreenyellowredblack.png)
 </details>
+</br>
+</br>
+
+# Limitations
+- Images may look better with some minimal external image editing.
+- Graphing options are currently limited.
+- Works best with images that have distinct color changes.
