@@ -80,7 +80,11 @@ const chart = await new ChartMe({image: image, colorBundle: [
     {tcolor: [150, 150, 150, 255], fcolor: "black"}]})
     .load()
 chart.cleanData()
-chart.splitColors({splits: 3})
+chart.splitColors({splits: 4, colorBundle:
+  [{tcolor: [0,0,0,255], fcolor: 'lime'},
+  {tcolor: [50,50,50,255], fcolor: 'grey'},
+  {tcolor: [150, 150, 150, 255], fcolor: 'blue'},
+  {tcolor: [100,100,100,255], fcolor: 'magenta'}]})
 chart.preprocess()
 chart.graph({height: 190, width: 120})
 ```
