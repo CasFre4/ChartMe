@@ -38,7 +38,8 @@ chart.preprocess()
 chart.saveFile('./data.json')
 ```
 <details>
-<summary> Click to view chart </summary>
+<summary> Click to view chart </summary></br>
+
 ![Example Chart](https://raw.githubusercontent.com/CasFre4/ChartMe/refs/heads/master/images/greenyellowredblack.png)
 </details>
 
@@ -55,9 +56,36 @@ const image = await Jimp.read(imagePath)
 const chart = await new ChartMe({image: image, colorBundle: [
     {tcolor: [0,0,0,255], fcolor: 'purple'},
     {tcolor: [100,100,100,255], fcolor: 'red'},
-    {tcolor: [150, 150, 150, 255], fcolor: 'yellow'}]}).load()
+    {tcolor: [150, 150, 150, 255], fcolor: 'yellow'}],
+    height: image.height/20, width: image.width/20})
+    .load()
 chart.cleanData()
 chart.splitColors({splits: 3})
 chart.preprocess()
 chart.graph({height: 190, width: 120})
 ```
+<details>
+<summary> Click to view chart </summary></br>
+
+![Example Chart](https://raw.githubusercontent.com/CasFre4/ChartMe/refs/heads/master/images/purpleredyellow.png)
+</details>
+
+### 4. With color splitting
+```js
+const image = await Jimp.read(imagePath)
+const chart = await new ChartMe({image: image, colorBundle: [
+    {tcolor: [0,0,0,255], fcolor: 'green'},
+    {tcolor: [50,50,50,255], fcolor: 'yellow'},
+    {tcolor: [100, 100, 100, 255], fcolor: 'red'},
+    {tcolor: [150, 150, 150, 255], fcolor: "black"}]})
+    .load()
+chart.cleanData()
+chart.splitColors({splits: 3})
+chart.preprocess()
+chart.graph({height: 190, width: 120})
+```
+<details>
+<summary> Click to view chart </summary></br>
+
+![Example Chart](https://raw.githubusercontent.com/CasFre4/ChartMe/refs/heads/master/images/splitgreenyellowredblack.png)
+</details>
