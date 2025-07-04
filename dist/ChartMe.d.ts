@@ -23,6 +23,7 @@ type constructorType = {
     height?: (number | undefined);
 };
 type graphType = {
+    container: HTMLDivElement;
     width?: number;
     height?: number;
     margin?: {
@@ -53,6 +54,6 @@ export default class ChartMe {
     loadFile(path: string): Promise<void>;
     splitColors({ splits, fillColors, targetColors, colorBundle, splitstrategy }: splitTypes): void;
     cleanData(): void;
-    graph({ width, height, margin }: graphType): void;
+    graph({ container, width, height, margin }: graphType): void;
 }
 export {};

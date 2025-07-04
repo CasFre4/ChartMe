@@ -384,7 +384,7 @@ export default class ChartMe {
             throw new Error("this.data undefined");
         }
     }
-    graph({ width, height, margin }) {
+    graph({ container, width, height, margin }) {
         if (margin === undefined) {
             margin = {
                 top: 20,
@@ -404,7 +404,7 @@ export default class ChartMe {
         }
         const keys = Object.keys(this.processed[0]).filter(k => k !== "order");
         const mycolors = Object.values(this.bundle).map(pair => `rgba(${pair.fcolor.join(",")})`);
-        const svg = d3.select("#my_dataviz")
+        const svg = d3.select(container)
             .append("svg")
             // .attr("width", 150)
             // .attr("height", 200)
@@ -431,7 +431,10 @@ export default class ChartMe {
             .range([0, width]);
         svg.append("g")
             .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x));
+            .call(d3.axisBottom(x)
+            .tickFormat(d => (+d % 20 === 0 ? d.toString() : "")))
+            .selectAll(".tick line")
+            .style("display", (_, i) => (i % 20 === 0 ? "block" : "none"));
         // var groups = d3.map(data, d => d.)
         const stackData = d3.stack().keys(keys)(this.processed);
         svg.append("g")

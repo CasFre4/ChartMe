@@ -52,11 +52,13 @@ chart.saveFile('./data.json')
 ```js
 const containerRef = useRef<HTMLDivElement>(null);
 useEffect(() => {
-    if (containerRef.current) {
+    const run = async () => {
+        if (!containerRef.current) return
         const chart = new ChartMe({})
         await chart.loadFile('./data.json')
         chart.graph({container: containerRef.current, height: 190, width: 120})//height and width define size of chart
     }
+    run();
 }, []);
 ```
 #### Without save file and using getElementById

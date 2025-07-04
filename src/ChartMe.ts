@@ -80,7 +80,6 @@ export default class ChartMe {
     constructor({image, fillColors, targetColors, colorBundle, width, height}: constructorType) {
         this.bundle = checkValues({fillColors,targetColors, colorBundle})
         this.image = image
-        
         // let newHeight: number
         // let newWidth: number
         if (image) {
@@ -107,6 +106,7 @@ export default class ChartMe {
         
     }
     async load() {
+        
         if (this.image) {
             const value = ResizeStrategy.NEAREST_NEIGHBOR
             await recolorImage(this.image, this.bundle)
@@ -182,14 +182,19 @@ export default class ChartMe {
         const { saveJSON } = await import("./node-utils");
         await saveJSON(towrite, path);        
     }
-    async loadFile(path: string) {
-        try {
-            const res = await fetch(path);
-            const data = await res.json();
-            this.processed = data['processed']
+    async loadJSON(data: any) {
+        this.processed = data['processed']
             this.bundle = data['bundle']
             this.height = data['height']
             this.width = data['width']
+    }
+    async loadFile(path: string) {
+        // console.log('CHARTMERUN')
+        try {
+            const res = await fetch(path);
+            const data = await res.json();
+            this.loadJSON(data)
+            console.log(`in load file - this.processed: ${this.processed}, this.width: ${this.width}, this.height: ${this.height}`)
         } catch(err){
             console.error("Error reading JSON:", err)
         }
@@ -446,7 +451,7 @@ export default class ChartMe {
 
         const keys = Object.keys(this.processed[0]).filter(k => k !== "order");
         const mycolors = Object.values(this.bundle).map(pair => `rgba(${pair.fcolor.join(",")})`)
-        const svg = d3.select("#my_dataviz")
+        const svg = d3.select(container)
         .append("svg")
             // .attr("width", 150)
             // .attr("height", 200)
