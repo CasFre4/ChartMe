@@ -150,14 +150,19 @@ export default class ChartMe {
         const { saveJSON } = await import("./node-utils");
         await saveJSON(towrite, path);
     }
+    async loadJSON(data) {
+        this.processed = data['processed'];
+        this.bundle = data['bundle'];
+        this.height = data['height'];
+        this.width = data['width'];
+    }
     async loadFile(path) {
+        // console.log('CHARTMERUN')
         try {
             const res = await fetch(path);
             const data = await res.json();
-            this.processed = data['processed'];
-            this.bundle = data['bundle'];
-            this.height = data['height'];
-            this.width = data['width'];
+            this.loadJSON(data);
+            console.log(`in load file - this.processed: ${this.processed}, this.width: ${this.width}, this.height: ${this.height}`);
         }
         catch (err) {
             console.error("Error reading JSON:", err);

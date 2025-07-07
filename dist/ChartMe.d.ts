@@ -51,6 +51,7 @@ export default class ChartMe {
     preview(outputPath: `${string}.${string}`): Promise<void>;
     preprocess(): void;
     saveFile(path: string): Promise<undefined>;
+    loadJSON(data: any): Promise<void>;
     loadFile(path: string): Promise<void>;
     splitColors({ splits, fillColors, targetColors, colorBundle, splitstrategy }: splitTypes): void;
     cleanData(): void;

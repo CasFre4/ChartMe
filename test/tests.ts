@@ -3,7 +3,7 @@ import ChartMe from '../src/ChartMe';
 import { Jimp } from 'jimp';
 // import { default as Jimp} from 'jimp'
 // async function main () {
-const imagePath = './nongitimages/testImage.png'
+const imagePath = './images/reddragonedited.png'
 const image = await Jimp.read(imagePath)
 // get the image path from command line arguments
 // const imagePath = process.argv[2];
@@ -41,7 +41,7 @@ const outputPath = '../images/nearestNeighbor.png'
 // console.log('split isnt splitting looks like its just nabbing 2 largest segments maybe?')
 //4 colors
 const defaultprop: number = 1/10
-const proportion: number = .5
+const proportion: number = 5
 // console.log(image.height)
 const newprop = defaultprop * proportion
 
@@ -57,15 +57,16 @@ const newprop = defaultprop * proportion
 // chart.preview(outputPath)
 
 
-
+image.flip({horizontal: true})
 const chart = await new ChartMe({image: image, colorBundle: 
-  [{tcolor: [0,0,0,255], fcolor: 'purple'},
-  {tcolor: [100,100,100,255], fcolor: 'red'},
-  {tcolor: [150, 150, 150, 255], fcolor: 'yellow'},
-  // {tcolor: [200, 200, 200, 255], fcolor: "purple"}
+  [{tcolor: [50,51,50,255], fcolor: 'grey'},
+  {tcolor: [33,28,25,255], fcolor: 'black'},
+  {tcolor: [85,24,24,255], fcolor: 'red'},
+  {tcolor: [100, 100, 100, 255], fcolor: 'yellow'},
+  {tcolor: [150, 150, 150, 255], fcolor: 'blue'},
   ], height: image.height * newprop, width: image.width * newprop}).load()
 chart.cleanData()
-chart.splitColors({splits: 3})///change split so that it creates a color for every possible position
+chart.splitColors({splits: 5})///change split so that it creates a color for every possible position
 // chart.splitColors({splits: 4, colorBundle:
 //   [{tcolor: [0,0,0,255], fcolor: 'lime'},
 //   {tcolor: [50,50,50,255], fcolor: 'grey'},
@@ -82,7 +83,7 @@ chart.preprocess()
 // console.log(chart.processed)
 const container = document.getElementById('my_dataviz')
 if (container && container instanceof HTMLDivElement) {
-  chart.graph({container: container, height: 250 - 20 - 40, width: 180 - 20 - 40})
+  chart.graph({container: container, height: image.height/newprop - 20 - 40, width: image.width/newprop - 20 - 40})
 }
 // .catch(err => {
 //   console.error('Error:', err);

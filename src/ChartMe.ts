@@ -194,7 +194,7 @@ export default class ChartMe {
             const res = await fetch(path);
             const data = await res.json();
             this.loadJSON(data)
-            console.log(`in load file - this.processed: ${this.processed}, this.width: ${this.width}, this.height: ${this.height}`)
+            // console.log(`in load file - this.processed: ${this.processed}, this.width: ${this.width}, this.height: ${this.height}`)
         } catch(err){
             console.error("Error reading JSON:", err)
         }
