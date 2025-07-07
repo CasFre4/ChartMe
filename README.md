@@ -110,6 +110,32 @@ if (container && container instanceof HTMLDivElement) {
 
 ![Example Chart](https://raw.githubusercontent.com/CasFre4/ChartMe/refs/heads/master/images/splitgreenyellowredblack.png)
 </details>
+
+### 5. Full example
+<!-- <details>
+<summary> Starting image </summary></br> -->
+#### Starting image
+![Example Chart](https://raw.githubusercontent.com/CasFre4/ChartMe/refs/heads/master/images/reddragon.jpg)
+#### Edit image
+Switching to an image with an alpha channel and removing parts of the image that you don't want on your chart will facilitate the process.
+![Example Chart](https://raw.githubusercontent.com/CasFre4/ChartMe/refs/heads/master/images/reddragonedited.png)
+####  Image processing and chart generation
+```js
+const editproportion = 1/2
+image.flip({horizontal: true})//Flip since charts only face right.
+const chart = await new ChartMe({image: image, colorBundle: 
+  [{tcolor: [50,51,50,255], fcolor: 'grey'},
+  {tcolor: [33,28,25,255], fcolor: 'black'},
+  {tcolor: [85,24,24,255], fcolor: 'red'},
+  {tcolor: [100, 100, 100, 255], fcolor: 'yellow'},
+  {tcolor: [150, 150, 150, 255], fcolor: 'blue'},
+  ], height: image.height * newprop, width: image.width * newprop}).load()
+chart.cleanData()
+chart.splitColors({splits: 5})
+chart.preprocess()
+```
+#### Final Chart
+![Example Chart](https://raw.githubusercontent.com/CasFre4/ChartMe/refs/heads/master/images/reddragonchart.png)
 </br>
 </br>
 
