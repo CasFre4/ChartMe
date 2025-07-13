@@ -1,4 +1,4 @@
-import ChartMe from '../src/ChartMe';
+import ChartMe from '../src/core/ChartMe';
 // import * as Jimp from 'jimp';
 import { Jimp } from 'jimp';
 // import { default as Jimp} from 'jimp'
@@ -75,16 +75,20 @@ chart.splitColors({splits: 5})///change split so that it creates a color for eve
 
 chart.preprocess()
 
-// chart.saveFile('./data.json')
-
+chart.saveFile('./data1.json')
+// chart.image.saveFile()
 
 // const chart = new ChartMe({})
 // await chart.loadFile('./data.json')
 // console.log(chart.processed)
-const container = document.getElementById('my_dataviz')
-if (container && container instanceof HTMLDivElement) {
-  chart.graph({container: container, height: image.height/newprop - 20 - 40, width: image.width/newprop - 20 - 40})
-}
+
+
+// const container = document.getElementById('my_dataviz')
+// if (container && container instanceof HTMLDivElement) {
+//   chart.graph({container: container, height: image.height/newprop - 20 - 40, width: image.width/newprop - 20 - 40})
+// }
+
+
 // .catch(err => {
 //   console.error('Error:', err);
 // });

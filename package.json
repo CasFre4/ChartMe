@@ -1,14 +1,21 @@
 {
   "name": "chartme",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "Turn an image into a chart.",
-  "main": "dist/ChartMe.js",
-  "types": "dist/ChartMe.d.ts",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/mjs/index.mjs",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
-    "build": "tsc --p tsconfig.app.json"
+    "build": "rollup -c"
   },
   "repository": {
     "type": "git",
@@ -16,13 +23,14 @@
   },
   "keywords": [
     "Chart",
-    "Face"
+    "Face",
+    "Graphics",
+    "Visuals"
   ],
   "files": [
     "dist",
     "README.md",
-    "LICENSE",
-    "images"
+    "LICENSE"
   ],
   "author": "CasFre4",
   "license": "MIT",
@@ -36,12 +44,16 @@
     "jimp": "^1.6.0"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
     "@types/color-name": "^2.0.0",
     "@types/d3": "^7.4.3",
     "@types/jimp": "^0.2.1",
     "@types/pngjs": "^6.0.5",
+    "rollup": "^4.44.2",
+    "rollup-plugin-dts": "^6.2.1",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5"
+    "typescript": "^5.8.3"
   }
 }

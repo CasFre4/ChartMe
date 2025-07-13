@@ -1,9 +1,11 @@
-import {JimpInstance, ResizeStrategy} from 'jimp'
+// const image
 // import {Jimp} from 'jimp'
+import { ResizeStrategy,JimpInstance } from 'jimp';
 // import * as Jimp from 'jimp'
 import colorName from 'color-name'
 import * as d3 from "d3"
-import { SplitStrategy } from './constants'
+import { SplitStrategy } from '../constants/constants'
+// import {saveJSON} from './node-utils'
 
 // type JimpInstance = Jimp.JimpInstance;
 // type JimpInstance = JimpType
@@ -174,12 +176,16 @@ export default class ChartMe {
     }
     async saveFile(path: string) {
         if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+            
             return Promise.reject(
                 new Error('saveFile() can only run in Node.js')
             );
         }
         const towrite: Object = {processed: this.processed, bundle: this.bundle, height: this.height, width: this.width}
-        const { saveJSON } = await import("./node-utils");
+        // const { saveJSON } = await import(`../server/saveJSON`);
+        const saveJSON = typeof window === 'undefined' 
+            ? (await import('../server/saveJSON')).saveJSON 
+            : () => { throw new Error('saveJSON only works on server'); }
         await saveJSON(towrite, path);        
     }
     async loadJSON(data: any) {
