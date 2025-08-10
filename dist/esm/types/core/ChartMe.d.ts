@@ -21,6 +21,11 @@ type constructorType = {
     colorBundle?: colorPreBundled;
     width?: (number | undefined);
     height?: (number | undefined);
+    axisEnabled?: boolean | undefined;
+    xAxisSpacing?: number | undefined;
+    yAxisSpacing?: number | undefined;
+    xAxisTickSpacing?: number | undefined;
+    yAxisTickSpacing?: number | undefined;
 };
 type graphType = {
     container: HTMLDivElement;
@@ -43,14 +48,19 @@ export default class ChartMe {
     bundle: colorBundleType;
     width: number | undefined;
     height: number | undefined;
+    axisEnabled: boolean;
+    xAxisSpacing: number;
+    yAxisSpacing: number;
+    xAxisTickSpacing: number;
+    yAxisTickSpacing: number;
     processed: {
         [key: string]: number;
     }[] | undefined;
-    constructor({ image, fillColors, targetColors, colorBundle, width, height }: constructorType);
+    constructor({ image, fillColors, targetColors, colorBundle, width, height, axisEnabled, xAxisSpacing, yAxisSpacing, xAxisTickSpacing, yAxisTickSpacing }: constructorType);
     load(): Promise<this>;
     preview(outputPath: `${string}.${string}`): Promise<void>;
     preprocess(): void;
-    saveFile(path: string): Promise<undefined>;
+    saveFile(path: string): Promise<void>;
     loadJSON(data: any): Promise<void>;
     loadFile(path: string): Promise<void>;
     splitColors({ splits, fillColors, targetColors, colorBundle, splitstrategy }: splitTypes): void;

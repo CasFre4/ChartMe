@@ -1,11 +1,6 @@
-'use strict';
-
 // "use server";
 // import {writeFileSync} from "fs"
 async function saveJSON(data, filename = "data.json") {
-    if (typeof window !== "undefined") {
-        throw new Error("saveJSON can only run on the server");
-    }
     // const { writeFileSync } = await eval('import("node:fs")');
     try {
         // Use require() which is easier to conditionally load
@@ -18,5 +13,5 @@ async function saveJSON(data, filename = "data.json") {
     // writeFileSync(filename, JSON.stringify(data, null, 2));
 }
 
-exports.saveJSON = saveJSON;
-//# sourceMappingURL=saveJSON-BGz5nKNH.cjs.map
+export { saveJSON };
+//# sourceMappingURL=saveJSON-CYGwuAlj.mjs.map

@@ -1,3 +1,5 @@
 nongitimages
 node_modules
 vite.config.ts
+publish.sh
+datagen

@@ -1,14 +1,20 @@
 {
   "name": "chartme",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "description": "Turn an image into a chart.",
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/mjs/index.mjs",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "require": "./dist/cjs/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/esm/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
+      }
     }
   },
   "types": "./dist/index.d.ts",
@@ -19,7 +25,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CasFre4/ChartMe.git"
+    "url": "git+https://github.com/CasFre4/ChartMeLight.git"
   },
   "keywords": [
     "Chart",
@@ -35,12 +41,14 @@
   "author": "CasFre4",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/CasFre4/ChartMe/issues"
+    "url": "https://github.com/CasFre4/ChartMeLight/issues"
   },
-  "homepage": "https://github.com/CasFre4/ChartMe#readme",
+  "homepage": "https://github.com/CasFre4/ChartMeLight#readme",
   "dependencies": {
     "color-name": "^2.0.0",
-    "d3": "^7.9.0",
+    "d3": "^7.9.0"
+  },
+  "peerDependencies": {
     "jimp": "^1.6.0"
   },
   "devDependencies": {

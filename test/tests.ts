@@ -3,7 +3,8 @@ import ChartMe from '../src/core/ChartMe';
 import { Jimp } from 'jimp';
 // import { default as Jimp} from 'jimp'
 // async function main () {
-const imagePath = './images/reddragonedited.png'
+// const imagePath = './images/reddragonedited.png'
+const imagePath = './nongitimages/testImage.png'
 const image = await Jimp.read(imagePath)
 // get the image path from command line arguments
 // const imagePath = process.argv[2];
@@ -41,7 +42,7 @@ const outputPath = '../images/nearestNeighbor.png'
 // console.log('split isnt splitting looks like its just nabbing 2 largest segments maybe?')
 //4 colors
 const defaultprop: number = 1/10
-const proportion: number = 5
+const proportion: number = .5
 // console.log(image.height)
 const newprop = defaultprop * proportion
 
@@ -57,16 +58,22 @@ const newprop = defaultprop * proportion
 // chart.preview(outputPath)
 
 
-image.flip({horizontal: true})
+// image.flip({horizontal: true})
+// const chart = await new ChartMe({image: image, colorBundle: 
+//   [{tcolor: [50,51,50,255], fcolor: 'grey'},
+//   {tcolor: [33,28,25,255], fcolor: 'black'},
+//   {tcolor: [85,24,24,255], fcolor: 'red'},
+//   {tcolor: [100, 100, 100, 255], fcolor: 'yellow'},
+//   {tcolor: [150, 150, 150, 255], fcolor: 'blue'},
+//   ], height: image.height * newprop, width: image.width * newprop}).load()
 const chart = await new ChartMe({image: image, colorBundle: 
-  [{tcolor: [50,51,50,255], fcolor: 'grey'},
-  {tcolor: [33,28,25,255], fcolor: 'black'},
-  {tcolor: [85,24,24,255], fcolor: 'red'},
+  [{tcolor: [0,0,0,255], fcolor: 'red'},
   {tcolor: [100, 100, 100, 255], fcolor: 'yellow'},
   {tcolor: [150, 150, 150, 255], fcolor: 'blue'},
-  ], height: image.height * newprop, width: image.width * newprop}).load()
+  ], height: image.height * newprop, width: image.width * newprop,
+  xAxisSpacing: 60, xAxisTickSpacing: 30}).load()
 chart.cleanData()
-chart.splitColors({splits: 5})///change split so that it creates a color for every possible position
+chart.splitColors({splits: 4})///change split so that it creates a color for every possible position
 // chart.splitColors({splits: 4, colorBundle:
 //   [{tcolor: [0,0,0,255], fcolor: 'lime'},
 //   {tcolor: [50,50,50,255], fcolor: 'grey'},
@@ -75,7 +82,7 @@ chart.splitColors({splits: 5})///change split so that it creates a color for eve
 
 chart.preprocess()
 
-chart.saveFile('./data1.json')
+// chart.saveFile('./data1.json')
 // chart.image.saveFile()
 
 // const chart = new ChartMe({})
@@ -83,10 +90,10 @@ chart.saveFile('./data1.json')
 // console.log(chart.processed)
 
 
-// const container = document.getElementById('my_dataviz')
-// if (container && container instanceof HTMLDivElement) {
-//   chart.graph({container: container, height: image.height/newprop - 20 - 40, width: image.width/newprop - 20 - 40})
-// }
+const container = document.getElementById('my_dataviz')
+if (container && container instanceof HTMLDivElement) {
+  chart.graph({container: container, height: .3* image.height/newprop - 20 - 40, width: .3 * image.width/newprop - 20 - 40})
+}
 
 
 // .catch(err => {

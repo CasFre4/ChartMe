@@ -50,6 +50,13 @@ type constructorType = {
     colorBundle?: colorPreBundled
     width?: (number|undefined)
     height?: (number|undefined)
+    axisEnabled?: boolean|undefined
+    // axisHeight?: number|undefined
+    // axisWidth?: number|undefined
+    xAxisSpacing?: number|undefined
+    yAxisSpacing?: number|undefined
+    xAxisTickSpacing?: number|undefined
+    yAxisTickSpacing?: number|undefined
 }
 type graphType = {
         container: HTMLDivElement
@@ -76,10 +83,45 @@ export default class ChartMe {
     // tocheck: number[]|undefined
     width: number|undefined
     height: number|undefined
+    axisEnabled: boolean
+    // axisHeight: number|undefined
+    // axisWidth: number|undefined
+    xAxisSpacing: number
+    yAxisSpacing: number
+    xAxisTickSpacing: number
+    yAxisTickSpacing: number
     // processed: {[key: string]: number}[]
     processed: {[key: string]: number}[] | undefined
     
-    constructor({image, fillColors, targetColors, colorBundle, width, height}: constructorType) {
+    constructor({image, fillColors, targetColors, colorBundle, width, height, axisEnabled, xAxisSpacing, yAxisSpacing, xAxisTickSpacing, yAxisTickSpacing}: constructorType) {
+        if (axisEnabled) {
+            this.axisEnabled = axisEnabled
+        } else {
+            this.axisEnabled = true
+        }
+
+        // this.axisHeight = axisHeight
+        // this.axisWidth = axisWidth
+        if (xAxisSpacing) {
+            this.xAxisSpacing = xAxisSpacing
+        } else {
+            this.xAxisSpacing = 20
+        }
+        if (yAxisSpacing) {
+            this.yAxisSpacing = yAxisSpacing
+        } else {
+            this.yAxisSpacing = 20
+        }
+        if (yAxisTickSpacing) {
+            this.yAxisTickSpacing = yAxisTickSpacing
+        } else {
+            this.yAxisTickSpacing = this.yAxisSpacing
+        }
+        if (xAxisTickSpacing) {
+            this.xAxisTickSpacing = xAxisTickSpacing
+        } else {
+            this.xAxisTickSpacing = this.xAxisSpacing
+        }
         this.bundle = checkValues({fillColors,targetColors, colorBundle})
         this.image = image
         // let newHeight: number
@@ -175,12 +217,6 @@ export default class ChartMe {
         // this.processed = preprocess2electricbugalu(processedArr)
     }
     async saveFile(path: string) {
-        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-            
-            return Promise.reject(
-                new Error('saveFile() can only run in Node.js')
-            );
-        }
         const towrite: Object = {processed: this.processed, bundle: this.bundle, height: this.height, width: this.width}
         // const { saveJSON } = await import(`../server/saveJSON`);
         const saveJSON = typeof window === 'undefined' 
@@ -473,24 +509,28 @@ export default class ChartMe {
         .range(mycolors);
 
         var y = d3.scaleBand()
-        .domain(this.processed.map(d => d.order.toString()).reverse())
-        .range([ height,0 ]).padding(.40);
-         svg.append("g")
-
-        .call(d3.axisLeft(y)
-        .tickFormat(d => (+d % 20 === 0 ? d: "")))
-        .selectAll(".tick line")
-        .style("display", (_, i) => (i%20===0?"block":"none"));
+            .domain(this.processed.map(d => d.order.toString()).reverse())
+            .range([ height,0 ]).padding(.40);
+        if (this.axisEnabled) {
+            svg.append("g")
+            .call(d3.axisLeft(y)
+            .tickFormat(d => (+d % this.yAxisSpacing === 0 ? d: "")))
+            .selectAll(".tick line")
+            .style("display", (_, i) => (i%this.yAxisTickSpacing===0?"block":"none"));
+        }
         // var yAxis = d3.axisLeft(y)
         var x = d3.scaleLinear()
             .domain([0, this.width])
             .range([0, width])
-        svg.append("g")
-            .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x)
-            .tickFormat(d => (+d % 20 === 0 ? d.toString(): "")))
-            .selectAll(".tick line")
-            .style("display", (_, i) => (i%20===0?"block":"none"));
+        if (this.axisEnabled) {
+            svg.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x)
+                .tickFormat(d => (+d % this.xAxisSpacing === 0 ? d.toString(): "")))
+                .selectAll<SVGLineElement, number>(".tick line")
+                .style("display", (d) => d % this.xAxisTickSpacing===0?"block":"none");
+        }
+            // .style("display", (_, i) => (i%20===0?"block":"none"));
         // var groups = d3.map(data, d => d.)
         const stackData = d3.stack().keys(keys)(this.processed)
 

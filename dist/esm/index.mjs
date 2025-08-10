@@ -4057,7 +4057,7 @@ var SplitStrategy;
 // const image
 // import {Jimp} from 'jimp'
 class ChartMe {
-    constructor({ image, fillColors, targetColors, colorBundle, width, height }) {
+    constructor({ image, fillColors, targetColors, colorBundle, width, height, axisEnabled, xAxisSpacing, yAxisSpacing, xAxisTickSpacing, yAxisTickSpacing }) {
         Object.defineProperty(this, "image", {
             enumerable: true,
             configurable: true,
@@ -4094,6 +4094,38 @@ class ChartMe {
             writable: true,
             value: void 0
         });
+        Object.defineProperty(this, "axisEnabled", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
+        // axisHeight: number|undefined
+        // axisWidth: number|undefined
+        Object.defineProperty(this, "xAxisSpacing", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
+        Object.defineProperty(this, "yAxisSpacing", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
+        Object.defineProperty(this, "xAxisTickSpacing", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
+        Object.defineProperty(this, "yAxisTickSpacing", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
         // processed: {[key: string]: number}[]
         Object.defineProperty(this, "processed", {
             enumerable: true,
@@ -4101,6 +4133,38 @@ class ChartMe {
             writable: true,
             value: void 0
         });
+        if (axisEnabled) {
+            this.axisEnabled = axisEnabled;
+        }
+        else {
+            this.axisEnabled = true;
+        }
+        // this.axisHeight = axisHeight
+        // this.axisWidth = axisWidth
+        if (xAxisSpacing) {
+            this.xAxisSpacing = xAxisSpacing;
+        }
+        else {
+            this.xAxisSpacing = 20;
+        }
+        if (yAxisSpacing) {
+            this.yAxisSpacing = yAxisSpacing;
+        }
+        else {
+            this.yAxisSpacing = 20;
+        }
+        if (yAxisTickSpacing) {
+            this.yAxisTickSpacing = yAxisTickSpacing;
+        }
+        else {
+            this.yAxisTickSpacing = this.yAxisSpacing;
+        }
+        if (xAxisTickSpacing) {
+            this.xAxisTickSpacing = xAxisTickSpacing;
+        }
+        else {
+            this.xAxisTickSpacing = this.xAxisSpacing;
+        }
         this.bundle = checkValues({ fillColors, targetColors, colorBundle });
         this.image = image;
         // let newHeight: number
@@ -4195,13 +4259,10 @@ class ChartMe {
         // this.processed = preprocess2electricbugalu(processedArr)
     }
     async saveFile(path) {
-        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-            return Promise.reject(new Error('saveFile() can only run in Node.js'));
-        }
         const towrite = { processed: this.processed, bundle: this.bundle, height: this.height, width: this.width };
         // const { saveJSON } = await import(`../server/saveJSON`);
         const saveJSON = typeof window === 'undefined'
-            ? (await import('./chunks/saveJSON-0zGu-vQ8.mjs')).saveJSON
+            ? (await import('./chunks/saveJSON-CYGwuAlj.mjs')).saveJSON
             : () => { throw new Error('saveJSON only works on server'); };
         await saveJSON(towrite, path);
     }
@@ -4480,21 +4541,26 @@ class ChartMe {
         var y = band()
             .domain(this.processed.map(d => d.order.toString()).reverse())
             .range([height, 0]).padding(.40);
-        svg.append("g")
-            .call(axisLeft(y)
-            .tickFormat(d => (+d % 20 === 0 ? d : "")))
-            .selectAll(".tick line")
-            .style("display", (_, i) => (i % 20 === 0 ? "block" : "none"));
+        if (this.axisEnabled) {
+            svg.append("g")
+                .call(axisLeft(y)
+                .tickFormat(d => (+d % this.yAxisSpacing === 0 ? d : "")))
+                .selectAll(".tick line")
+                .style("display", (_, i) => (i % this.yAxisTickSpacing === 0 ? "block" : "none"));
+        }
         // var yAxis = d3.axisLeft(y)
         var x = linear()
             .domain([0, this.width])
             .range([0, width]);
-        svg.append("g")
-            .attr("transform", "translate(0," + height + ")")
-            .call(axisBottom(x)
-            .tickFormat(d => (+d % 20 === 0 ? d.toString() : "")))
-            .selectAll(".tick line")
-            .style("display", (_, i) => (i % 20 === 0 ? "block" : "none"));
+        if (this.axisEnabled) {
+            svg.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(axisBottom(x)
+                .tickFormat(d => (+d % this.xAxisSpacing === 0 ? d.toString() : "")))
+                .selectAll(".tick line")
+                .style("display", (d) => d % this.xAxisTickSpacing === 0 ? "block" : "none");
+        }
+        // .style("display", (_, i) => (i%20===0?"block":"none"));
         // var groups = d3.map(data, d => d.)
         const stackData = stack().keys(keys)(this.processed);
         svg.append("g")
